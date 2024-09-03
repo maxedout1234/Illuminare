@@ -20,7 +20,7 @@ async function getProjectIdea() {
         {
             type: 'input',
             name: 'getProjectIdea',
-            message: 'What kind of project do you want to create?',
+            message: 'What is your project idea?',
         }
     ]);
 
@@ -30,8 +30,7 @@ async function getProjectIdea() {
         contents: [{
             parts: [{
                 text: `As an expert programmer, ${idea.getProjectIdea}. 
-                Focus on providing detailed technical specifications and suggestions, 
-                programming languages, frameworks, and best practices for implementation.`
+                Focus on providing detailed technical specifications and suggestions for implementation. It should be language agnostic but easy to be understood by any developer.`
             }]
         }],
         generationConfig: {
@@ -68,7 +67,26 @@ async function getProjectIdea() {
                 // step 2, ask more detailed questions
                 // which tech stack?
                 // which database? If needed.
-                console.log(project);
+                // Frontend or Backend?
+                inquirer.prompt({
+                    type: 'list',
+                    name: 'frontOrBackend',
+                    message: 'Is this a frontend or backend project?',
+                    choices: ['Frontend', 'Backend']
+                })
+                    .then(async (answers) => {
+                        spinner.succeed(`Ok a ${answers.frontOrBackend}`);
+                        if (answers.frontOrBackend === 'Frontend') {
+                            // Frontend continue questions.
+                            // This is where Backend question is.
+                        } else {
+                            // Backend Questions.
+
+                        }
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
             } else {
                 // if no, ask different follow up questions.
                 // for example, fine tune the project.
@@ -105,8 +123,7 @@ async function fineTuneProjectPrompt(idea) {
         contents: [{
             parts: [{
                 text: `As an expert programmer, ${idea} to the specifications in ${finetune.fineTuneProject}.
-                Focus on providing detailed technical specifications and suggestions,
-                programming languages, frameworks, and best practices for implementation.`
+                Focus on providing detailed technical specifications and suggestions for implementation.`
             }]
         }],
         generationConfig: {
@@ -122,9 +139,9 @@ async function fineTuneProjectPrompt(idea) {
         .catch(error => {
             throw error;
         });
-        
-        const project = result.response.text();
-        console.log(project);
+
+    const project = result.response.text();
+    console.log(project);
 
 };
 
