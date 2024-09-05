@@ -3,6 +3,7 @@ import { program } from 'commander';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import { Init } from './commands/idea.mjs';
+const process = process;
 
 dotenv.config();
 

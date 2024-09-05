@@ -4,6 +4,7 @@ import inquirer from "inquirer";
 import ora from 'ora';
 import dotenv from 'dotenv';
 dotenv.config();
+const process = process;
 
 // Generative AI client
 const genAI = new GoogleGenerativeAI(process.env.GEN_KEY);
@@ -62,7 +63,6 @@ async function getProjectIdea() {
     ])
         .then(async (answers) => {
             if (answers.confirm) {
-                const project = result.response.text();
                 // project is ok and Illuminare should continue to step 2,
                 // step 2, ask more detailed questions
                 // which tech stack?
