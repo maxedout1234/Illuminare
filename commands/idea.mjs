@@ -4,11 +4,19 @@ import inquirer from "inquirer";
 import ora from 'ora';
 import dotenv from 'dotenv';
 dotenv.config();
-const process = process;
+const runtime = process;
 
 // Generative AI client
-const genAI = new GoogleGenerativeAI(process.env.GEN_KEY);
+const genAI = new GoogleGenerativeAI(runtime.env.GEN_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+const aiModelConfig = {
+    generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        maxOutputTokens: 1024,
+    }
+};
 
 export async function Init() {
     console.log(chalk.blue("Welcome to Illuminare!"));
@@ -17,13 +25,15 @@ export async function Init() {
 
 // Project ideas, talk with AI.
 async function getProjectIdea() {
-    const idea = await inquirer.prompt([
-        {
-            type: 'input',
-            name: 'getProjectIdea',
-            message: 'What is your project idea?',
-        }
-    ]);
+    // const idea = await inquirer.prompt([
+    //     {
+    //         type: 'input',
+    //         name: 'getProjectIdea',
+    //         message: 'What is your project idea?',
+    //     }
+    // ]);
+
+    const idea = await interactWithAIPrompt('What is your project idea?', 'getProjectIdea');
 
     // ora here to show loading
     const spinner = ora('Generating content...').start();
@@ -34,12 +44,7 @@ async function getProjectIdea() {
                 Focus on providing detailed technical specifications and suggestions for implementation. It should be language agnostic but easy to be understood by any developer.`
             }]
         }],
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024
-        }
+        ...aiModelConfig
     })
         .then(response => {
             spinner.succeed('Content generated successfully');
@@ -47,7 +52,14 @@ async function getProjectIdea() {
         })
         .catch(error => {
             spinner.fail('Failed to generate content');
-            throw error;
+            if (error.response) {
+                console.error(`API Error: ${error.response.status} - ${error.response.data}`);
+            } else if (error.request) {
+                console.error('Network Error: No response received');
+            } else {
+                console.error('Error:', error.message);
+            }
+            throw new Error('Content generation failed. Please try again later.');
         });
 
     const project = result.response.text();
@@ -111,13 +123,8 @@ async function getProjectIdea() {
 
 // Fine tune the project.
 async function fineTuneProjectPrompt(idea) {
-    const finetune = await inquirer.prompt([
-        {
-            type: 'input',
-            name: 'fineTuneProject',
-            message: 'Ok, what should we change?',
-        }
-    ]);
+
+    const finetune = await interactWithAIPrompt('Ok, what should we change?', 'fineTuneProject');
 
     const result = await model.generateContent({
         contents: [{
@@ -126,12 +133,7 @@ async function fineTuneProjectPrompt(idea) {
                 Focus on providing detailed technical specifications and suggestions for implementation.`
             }]
         }],
-        generationConfig: {
-            temperature: 0.7,
-            topK: 40,
-            topP: 0.95,
-            maxOutputTokens: 1024
-        }
+        ...aiModelConfig
     })
         .then(response => {
             return response;
@@ -155,3 +157,19 @@ async function fineTuneProjectPrompt(idea) {
 //
 // Name of project
 // if no name supplied, generate one.
+
+async function interactWithAIPrompt(message = '', name = '') {
+    const response = await inquirer.prompt([
+        {
+            type: 'input',
+            name,
+            message: `${message}`,
+        }
+    ]);
+
+    const formattedResponse = {};
+    Object.entries(response).forEach(([key, value]) => {
+        formattedResponse[key] = value;
+    });
+    return formattedResponse;
+}
