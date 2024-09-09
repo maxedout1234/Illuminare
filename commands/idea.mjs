@@ -10,12 +10,10 @@ const runtime = process;
 const genAI = new GoogleGenerativeAI(runtime.env.GEN_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-const aiModelConfig = {
-    generationConfig: {
+const generationConfig = {
         temperature: 0.7,
         topK: 40,
         maxOutputTokens: 1024,
-    }
 };
 
 /**
@@ -50,7 +48,7 @@ async function fineTuneProjectPrompt(idea) {
                 Focus on providing detailed technical specifications and suggestions for implementation.`
             }]
         }],
-        ...aiModelConfig
+        generationConfig
     })
         .then(response => {
             return response;
@@ -91,8 +89,7 @@ async function interactWithAIPrompt(message = '', name = '') {
  * @returns {Object} The user's project idea
  */
 async function getProjectPrompt() {
-    const idea = await interactWithAIPrompt('What kind of project do you want to create? (What are you in the mood for?)', 'projectIdea');
-    return idea;
+    return await interactWithAIPrompt('What kind of project do you want to create? (What are you in the mood for?)', 'projectIdea');
 }
 
 /**
@@ -110,7 +107,7 @@ async function generateContent(idea) {
                     Focus on providing detailed technical specifications and suggestions for implementation. It should be language agnostic but easy to be understood by any developer.`
                 }]
             }],
-            ...aiModelConfig
+            generationConfig
         });
 
         spinner.succeed('Content generated successfully');
@@ -179,16 +176,16 @@ async function handleBackendQuestions() {
  * @param {string} project - The rejected project idea
  */
 async function handleRejectedIdea(project) {
-    inquirer.prompt({
+    const { fineTuneProject } = await inquirer.prompt({
         type: 'list',
         name: 'fineTuneProject',
         message: 'Ok, what should we change?',
         choices: ['Start from the beginning', 'Fine tune project idea'],
-    }).then(async (answers) => {
-        if (answers.fineTuneProject === 'Start from the beginning') {
-            getProjectIdea();
-        } else {
-            fineTuneProjectPrompt(project.getProjectIdea);
-        }
     });
+
+    if (fineTuneProject === 'Start from the beginning') {
+        await getProjectIdea();
+    } else {
+        await fineTuneProjectPrompt(project);
+    }
 }
