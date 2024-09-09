@@ -3,6 +3,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import inquirer from "inquirer";
 import ora from 'ora';
 import dotenv from 'dotenv';
+import { handleFrontendQuestions } from "./frontendQuestions.mjs";
+import { handleBackendQuestions } from "./backendQuestions.mjs";
 dotenv.config();
 const runtime = process;
 
@@ -80,7 +82,6 @@ async function interactWithAIPrompt(message = '', name = '') {
     Object.entries(response).forEach(([key, value]) => {
         formattedResponse[key] = value;
     });
-
     return formattedResponse;
 }
 
@@ -103,7 +104,7 @@ async function generateContent(idea) {
         const result = await model.generateContent({
             contents: [{
                 parts: [{
-                    text: `As an expert programmer, ${idea.getProjectIdea}. 
+                    text: `As an expert programmer, ${idea.projectIdea}. 
                     Focus on providing detailed technical specifications and suggestions for implementation. It should be language agnostic but easy to be understood by any developer.`
                 }]
             }],
@@ -155,20 +156,6 @@ async function handleConfirmedIdea(project) {
     } else {
         await handleBackendQuestions();
     }
-}
-
-/**
- * Handles questions specific to frontend projects.
- */
-async function handleFrontendQuestions() {
-    console.log('Frontend questions');
-}
-
-/**
- * Handles questions specific to backend projects.
- */
-async function handleBackendQuestions() {
-    console.log('Backend questions');
 }
 
 /**
